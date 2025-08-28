@@ -1,0 +1,9 @@
+/.idea
+/node_modules
+/.idea/
+.idea/deployment.xml
+/local/vendor/
+/local/composer.json
+/local/composer.lock
+/local/templates/corp-itpin/node_modules/
+/.cursor/
