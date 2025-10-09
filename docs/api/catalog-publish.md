@@ -22,14 +22,23 @@
         "external_code": "PRODUCT001123",
         "name": "Тест товар 1С 1",
         "properties": {
-          "URL_DETAIL_IMG": "/RSL_БП-00237141_1.jpg",
           "CATEGORY": "Смартфоны",
           "BREND": "Apple",
-          "ART": "123123"
+          "ART": "123123",
+          "url_detail_img": [
+            "\\\\srv-1cbuh-nn.kokonn.local\\pic_unf\\20221029\\AR3344BKZ,WFM\\/B.jpg"
+          ]
         },
         "quantity": 100,
         "store_quantities": [
-          {"mgkl100321": 564}
+          {
+            "store_id": "d0744917-1777-11ea-a69d-00155d006111",
+            "quantity": 564
+          },
+          {
+            "store_id": "d0744917-1777-11ea-a69d-00155d006112",
+            "quantity": 210
+          }
         ],
         "price": 432,
         "discount_price": 123
@@ -52,11 +61,21 @@
           "properties": {
             "CATEGORY": "Смартфоны",
             "BREND": "Apple",
-            "ART": "123123"
+            "ART": "123123",
+            "url_detail_img": [
+              "\\\\srv-1cbuh-nn.kokonn.local\\pic_unf\\20221029\\AR3344BKZ,WFM\\/B.jpg"
+            ]
           },
           "quantity": 100,
           "store_quantities": [
-            {"mgkl100321": 564}
+            {
+              "store_id": "d0744917-1777-11ea-a69d-00155d006111",
+              "quantity": 564
+            },
+            {
+              "store_id": "d0744917-1777-11ea-a69d-00155d006112",
+              "quantity": 210
+            }
           ],
           "price": 432,
           "discount_price": 123
@@ -74,10 +93,11 @@
 - `product` (object): основная информация о конкретном продукте.
   - `external_code` (string): внешний код продукта (GUID/ID из 1С или иная уникальная ссылка).
   - `name` (string, optional): наименование продукта.
-  - `properties` (object, optional): произвольные атрибуты продукта в формате ключ/значение.
+  - `properties` (object, optional): произвольные атрибуты продукта в формате ключ/значение. Поддерживается, в частности, ключ `url_detail_img` — массив путей или URL к фотографиям товара (например `"\\\\srv-1cbuh-nn.kokonn.local\\pic_unf\\20221029\\AR3344BKZ,WFM/B.jpg"`).
   - `quantity` (integer, optional): суммарное количество по всем складам.
-  - `store_quantities` (array, optional): список объектов вида `{ "<warehouseId>": <qty> }`.
-    - Каждый объект содержит единственную пару ключ/значение: идентификатор склада → количество на этом складе.
+  - `store_quantities` (array, optional): список объектов, описывающих остатки по складам.
+    - `store_id` (string): идентификатор склада (GUID, код и т.п.).
+    - `quantity` (number): остаток на соответствующем складе.
   - `price` (number, optional): цена без скидки.
   - `discount_price` (number, optional): цена со скидкой.
 
@@ -85,15 +105,14 @@
   - Каждый элемент — объект с полями предложения:
     - `external_code` (string): внешний код предложения.
     - `name` (string, optional): наименование предложения.
-    - `properties` (object, optional): свойства предложения.
+    - `properties` (object, optional): свойства предложения. Аналогично продукту, может содержать ключ `url_detail_img` со списком путей/URL к фотографиям.
     - `quantity` (integer, optional): суммарное количество предложения на складах.
-    - `store_quantities` (array, optional): как у продукта — массив объектов `{ "<warehouseId>": <qty> }`.
+    - `store_quantities` (array, optional): аналогично продукту — массив объектов с полями `store_id` и `quantity`.
     - `price` (number, optional): цена предложения без скидки.
     - `discount_price` (number, optional): цена предложения со скидкой.
 
 ### Замечания
 
-- Идентификаторы складов (например, `mgkl100321` или GUID) передаются как ключи в элементах массива `store_quantities`.
-- Если для продукта указаны `offers`, агрегированные поля на уровне `product` (цены/остатки) могут использоваться как общие значения по умолчанию или метаданные — конкретная логика зависит от потребителя.
-
-
+- Идентификаторы складов (например, `mgkl100321` или GUID) передаются в поле `store_id` элементов массива `store_quantities`.
+- Если для продукта указаны `offers`, все значения по ценам, суммарным остаткам и остаткам по складам должны передаваться в рамках каждого конкретного предложения. Поля `price`, `discount_price`, `quantity` и `store_quantities` на уровне `product` в этом случае могут служить только общими значениями по умолчанию или метаданными (по согласованию с потребителем).
+- Если у продукта нет `offers`, то данные по `price`, `discount_price`, `quantity` и `store_quantities` заполняются на уровне `product`.
