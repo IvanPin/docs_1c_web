@@ -43,6 +43,7 @@
       "deliveryPrice": 0,
       "createdOn": "01.11.2024 14:34:53",
       "updatedOn": "01.11.2024 14:34:53",
+      "customer_card": "79083029777",
       "properties": [
         {
           "name": "ФИО",
@@ -84,6 +85,7 @@
 - `deliveryPrice` (number) — стоимость доставки.
 - `createdOn` (string) — дата создания заказа (`DD.MM.YYYY HH:mm:ss`).
 - `updatedOn` (string) — дата последнего обновления заказа (`DD.MM.YYYY HH:mm:ss`).
+- `customer_card` (string, optional) — номер телефона клиента.
 - `is_synced` (string, optional) — признак передачи в 1С (`Y` | `N`), если возвращается.
 - `comment` (string|null, optional) — комментарий менеджера/клиента.
 - `properties` (array) — произвольные свойства заказа.
