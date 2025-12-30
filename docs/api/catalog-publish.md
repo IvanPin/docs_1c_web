@@ -78,7 +78,8 @@
             }
           ],
           "price": 432,
-          "discount_price": 123
+          "discount_price": 123,
+          "price_with_max_bonus": 100
         }
       ]
     }
@@ -100,6 +101,7 @@
     - `quantity` (number): остаток на соответствующем складе.
   - `price` (number, optional): цена без скидки.
   - `discount_price` (number, optional): цена со скидкой.
+  - `price_with_max_bonus` (number, optional): Цена с учётом максимальных бонусов.
 
 - `offers` (array, optional): список предложений (SKU) для продукта.
   - Каждый элемент — объект с полями предложения:
