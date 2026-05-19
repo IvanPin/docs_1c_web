@@ -7,6 +7,7 @@
 - **Единый формат ответа**: `{ "status": 1|0, "error": string|null, "result": object|null }`.
 - **Безопасность**: заголовок `ApiKey`.
 - **Лояльность**: поддерживаются код карты, сумма до следующей скидки, накопленные суммы и процент скидки.
+- **Согласия пользователя**: поддерживаются булевые флаги `consentPersonalData` (согласие на обработку персональных данных) и `consentMarketing` (согласие на получение рекламных материалов) с датами фиксации в формате ISO 8601.
 
 
 ### Эндпоинт
@@ -65,7 +66,11 @@
       "loyaltyCard": "CARD001122",
       "loyaltySumToNextDiscount": "1500",
       "loyaltyTotalAmount": "25000.50",
-      "loyaltyDiscountPercent": "7.5"
+      "loyaltyDiscountPercent": "7.5",
+      "consentPersonalData": true,
+      "consentPersonalDataAt": "2026-05-19T12:34:56+03:00",
+      "consentMarketing": true,
+      "consentMarketingAt": "2026-05-19T12:34:56+03:00"
     }
   ]
 }
@@ -84,6 +89,10 @@
 - `loyaltySumToNextDiscount` (number|string, optional): сумма до следующей скидки.
 - `loyaltyTotalAmount` (number|string, optional): накопленная сумма покупок.
 - `loyaltyDiscountPercent` (number|string, optional): текущий процент скидки.
+- `consentPersonalData` (boolean, optional): согласие пользователя на обработку персональных данных. Фиксируется один раз — в момент регистрации; в личном кабинете не отзывается. Принимаются также строковые значения `"true"/"false"/"1"/"0"`.
+- `consentPersonalDataAt` (string, optional): дата и время фиксации согласия на ПДн в формате ISO 8601 с timezone (например, `2026-05-19T12:34:56+03:00`).
+- `consentMarketing` (boolean, optional): согласие пользователя на получение рекламных и информационных материалов. Пользователь может менять значение из личного кабинета или при оформлении заказа.
+- `consentMarketingAt` (string, optional): дата и время последнего изменения маркетингового согласия в формате ISO 8601.
 - `withBonusList` (boolean, optional, default: `false`): если `true` — в ответе для каждого пользователя возвращается массив `bonuses[]` с историей начислений/списаний бонусов.
 - Массив `users` может содержать от 1 до N записей; текущие сценарии используют одну запись.
 
@@ -109,7 +118,11 @@
           "loyaltyCard": "CARD001122",
           "loyaltySumToNextDiscount": 1500,
           "loyaltyTotalAmount": 25000.5,
-          "loyaltyDiscountPercent": 7.5
+          "loyaltyDiscountPercent": 7.5,
+          "consentPersonalData": true,
+          "consentPersonalDataAt": "2026-05-19T12:34:56+03:00",
+          "consentMarketing": true,
+          "consentMarketingAt": "2026-05-19T12:34:56+03:00"
         }
       ]
   }
@@ -242,7 +255,9 @@ ApiKey: <секретный_ключ_сайта>
       "middleName": "Иванович",
       "birthday": "1990-01-31",
       "gender": "M",
-      "externalId": "123"
+      "externalId": "123",
+      "consentMarketing": false,
+      "consentMarketingAt": "2026-05-19T15:00:00+03:00"
     }
   ]
 }
@@ -268,7 +283,11 @@ ApiKey: <секретный_ключ_сайта>
         "loyaltyCard": "CARD001122",
         "loyaltySumToNextDiscount": 1500,
         "loyaltyTotalAmount": 25000.5,
-        "loyaltyDiscountPercent": 7.5
+        "loyaltyDiscountPercent": 7.5,
+        "consentPersonalData": true,
+        "consentPersonalDataAt": "2026-05-19T12:34:56+03:00",
+        "consentMarketing": false,
+        "consentMarketingAt": "2026-05-19T15:00:00+03:00"
       }
     ]
   }
@@ -281,6 +300,9 @@ ApiKey: <секретный_ключ_сайта>
 - При отсутствии пользователя и включённой авто‑регистрации — создавать запись.
 - `birthday` должен соответствовать `YYYY-MM-DD`; иначе игнорировать поле и вернуть предупреждение в `error` или детальный массив ошибок в будущем `warnings`.
 - Поля лояльности (`loyaltySumToNextDiscount`, `loyaltyTotalAmount`, `loyaltyDiscountPercent`) принимаются как числа или строки, приводятся к числовому формату. Пустые значения игнорируются.
+- Поля согласий (`consentPersonalData`, `consentMarketing`) принимаются как `boolean` или строковые значения `"true"/"false"/"1"/"0"/"Y"/"N"`. При отсутствии поля во входящем запросе текущее значение в БД не изменяется.
+- Поля `consentPersonalDataAt` и `consentMarketingAt` ожидаются в формате ISO 8601 с timezone. Если поле опущено, при изменении флага сторона-получатель сохраняет текущий timestamp.
+- Согласие на ПДн (`consentPersonalData`) фиксируется один раз в момент регистрации и не отзывается пользователем через личный кабинет. Маркетинговое согласие (`consentMarketing`) пользователь может изменять.
 
 ### Ошибки и коды
 
@@ -401,3 +423,7 @@ HTTP-коды (рекомендуется):
 - `UF_SUM_TO_NEXT_DISCOUNT` (или `UF_LOYALTY_SUM_TO_NEXT`, `UF_SUM_TO_NEXT`) ↔ `loyaltySumToNextDiscount`
 - `UF_LOYALTY_TOTAL_AMOUNT` (или `UF_SUM_ACCUMULATED`, `UF_SUMMA_NAKOPLENIY`) ↔ `loyaltyTotalAmount`
 - `UF_LOYALTY_DISCOUNT_PERCENT` (или `UF_DISCOUNT_PERCENT`, `UF_PROCENT_SKIDKI`) ↔ `loyaltyDiscountPercent`
+- `UF_PERSONAL_DATA_CONSENT` (boolean) ↔ `consentPersonalData`
+- `UF_PERSONAL_DATA_CONSENT_AT` (datetime) ↔ `consentPersonalDataAt`
+- `UF_MARKETING_CONSENT` (boolean) ↔ `consentMarketing`
+- `UF_MARKETING_CONSENT_AT` (datetime) ↔ `consentMarketingAt`
