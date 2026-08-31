@@ -1,0 +1,501 @@
+openapi: 3.1.0
+
+info:
+  title: Пламенея — управление пользователями
+  version: "1.0.0"
+  description: |
+    Единый контракт управления пользователями сайта. Один и тот же для 1С и для
+    внешних сервисов (телеграм-бот и любой следующий) — отличаются только ключ
+    и набор прав.
+
+    Все методы отвечают HTTP 200 с конвертом `{status, error, result}`:
+    бизнес-ошибка приходит как `status: 0`, а не как код 4xx. Собственный HTTP-код
+    получают только транспортные ошибки — 400, 401, 403, 405.
+
+    Сервер принимает пути и со слешем на конце, и без него. Если `api/.htaccess`
+    на контуре не выкачен, работает только форма со слешем: без него Apache
+    отдаёт 301, а клиенты на 301 меняют POST на GET и получают 405.
+
+    Подробности и примеры: user-sync.md (обмен с 1С) и user-external.md
+    (внешние сервисы). Коллекция Postman — api/v1/user/postman_collection.json
+    в репозитории бэкенда.
+
+servers:
+  - url: https://api.plameneya.com
+    description: Боевой контур
+
+security:
+  - ApiKeyHeader: []
+
+tags:
+  - name: users
+    description: Чтение, создание, обновление и отключение пользователей
+
+paths:
+  /api/v1/user/get:
+    post:
+      tags: [users]
+      summary: Прочитать карточку пользователя
+      operationId: getUsers
+      description: |
+        Чтение без побочных эффектов. Запрос с телефоном несуществующего
+        пользователя не регистрирует его, а возвращает `found: false`.
+
+        Ответ 1:1 к запросу и в том же порядке.
+
+        Требуемый scope — `users:read`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LookupRequest'
+            examples:
+              byPhone:
+                summary: По телефону
+                value:
+                  users:
+                    - phone: '+79991234567'
+              byTelegramId:
+                summary: По идентификатору телеграма
+                value:
+                  users:
+                    - externalRefs:
+                        telegram: '123456789'
+              withBonuses:
+                summary: С историей бонусов
+                value:
+                  users:
+                    - phone: '+79991234567'
+                  withBonusList: true
+      responses:
+        '200':
+          $ref: '#/components/responses/UserCards'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '405': { $ref: '#/components/responses/MethodNotAllowed' }
+
+  /api/v1/user/sync:
+    post:
+      tags: [users]
+      summary: Создать или обновить пользователя
+      operationId: syncUsers
+      description: |
+        Upsert по телефону. Телефон перестаёт быть обязательным, если
+        пользователя можно найти по `externalId` или `externalRefs` — но
+        зарегистрировать нового без телефона нельзя.
+
+        Тот же метод используется в обмене с 1С.
+
+        Требуемый scope — `users:write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+            examples:
+              linkTelegram:
+                summary: Регистрация с привязкой телеграма
+                value:
+                  users:
+                    - phone: '+79991234567'
+                      firstName: Иван
+                      consentPersonalData: true
+                      consentPersonalDataAt: '2026-08-24T12:00:00+03:00'
+                      externalRefs:
+                        telegram: '123456789'
+              updateByTelegramId:
+                summary: Обновление, когда известен только телеграм-ID
+                value:
+                  users:
+                    - externalRefs:
+                        telegram: '123456789'
+                      email: new@example.com
+      responses:
+        '200':
+          $ref: '#/components/responses/UserCards'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '405': { $ref: '#/components/responses/MethodNotAllowed' }
+
+  /api/v1/user/deactivate:
+    post:
+      tags: [users]
+      summary: Отключить или обезличить пользователя
+      operationId: deactivateUsers
+      description: |
+        Полного удаления записи нет: оно оторвало бы заказы от покупателя и
+        сломало историю продаж. Режим `anonymize` закрывает ту же задачу по
+        152-ФЗ, сохраняя заказы.
+
+        Метод идемпотентен: ненайденный пользователь возвращается как
+        `found: false` и ошибкой не считается.
+
+        Требуемый scope — `users:deactivate`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeactivateRequest'
+            examples:
+              deactivate:
+                summary: Отключить вход
+                value:
+                  users:
+                    - phone: '+79991234567'
+                  mode: deactivate
+              anonymize:
+                summary: Обезличить по запросу пользователя
+                value:
+                  users:
+                    - phone: '+79991234567'
+                  mode: anonymize
+      responses:
+        '200':
+          description: Результат по каждому пользователю
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      result:
+                        type: object
+                        properties:
+                          users:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DeactivationResult'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '405': { $ref: '#/components/responses/MethodNotAllowed' }
+
+components:
+
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: ApiKey
+      description: |
+        Ключ клиента из реестра `api/config/clients.php`. Принимаются также
+        заголовки `X-Api-Key` и `Authorization: Bearer <ключ>` — все три
+        равнозначны, чтобы не переделывать уже работающие интеграции.
+
+  schemas:
+
+    Envelope:
+      type: object
+      required: [status, error, result]
+      properties:
+        status:
+          type: integer
+          enum: [0, 1]
+          description: 1 — успех, 0 — бизнес-ошибка (текст в `error`)
+        error:
+          type: [string, 'null']
+        result:
+          type: [object, 'null']
+
+    UserCriteria:
+      type: object
+      description: |
+        Критерии поиска пользователя. Порядок: phone → externalId → externalRefs.
+        Достаточно любого одного.
+      properties:
+        phone:
+          type: string
+          pattern: '^\+7\d{10}$'
+          description: Нормализуется к +7XXXXXXXXXX, принимается и 8XXXXXXXXXX
+          examples: ['+79991234567']
+        externalId:
+          type: string
+          description: ID пользователя на сайте (Bitrix ID)
+          examples: ['123']
+        externalRefs:
+          $ref: '#/components/schemas/ExternalRefs'
+
+    ExternalRefs:
+      description: |
+        Связки с внешними сервисами. Пара (provider, id) уникальна: один
+        телеграм-аккаунт не может указывать на двух пользователей сайта.
+      oneOf:
+        - type: array
+          items:
+            type: object
+            required: [provider, id]
+            properties:
+              provider:
+                type: string
+                maxLength: 50
+                description: Идентификатор сервиса, приводится к нижнему регистру
+                examples: [telegram]
+              id:
+                type: string
+                maxLength: 190
+                examples: ['123456789']
+              meta:
+                type: object
+                additionalProperties: true
+        - type: object
+          description: Краткая запись, когда meta не нужна
+          additionalProperties:
+            type: string
+          examples:
+            - telegram: '123456789'
+
+    UserInput:
+      allOf:
+        - $ref: '#/components/schemas/UserCriteria'
+        - type: object
+          properties:
+            email: { type: string, format: email }
+            lastName: { type: string }
+            firstName: { type: string }
+            middleName: { type: string }
+            birthday: { type: string, format: date, examples: ['1990-01-31'] }
+            gender:
+              type: string
+              enum: [M, F, U]
+            loyaltyCard: { type: string }
+            loyaltySumToNextDiscount: { type: [number, string] }
+            loyaltyTotalAmount: { type: [number, string] }
+            loyaltyDiscountPercent: { type: [number, string] }
+            consentPersonalData:
+              type: boolean
+              description: Согласие на обработку ПДн. Фиксируется один раз при регистрации
+            consentPersonalDataAt: { type: string, format: date-time }
+            consentMarketing:
+              type: boolean
+              description: Согласие на рекламные материалы. Пользователь может менять
+            consentMarketingAt: { type: string, format: date-time }
+            questionnaire:
+              type: object
+              description: Ответы онбординг-опросника, см. user-sync.md
+              additionalProperties: true
+            externalRefsMode:
+              type: string
+              enum: [add, replace]
+              default: add
+              description: |
+                add — связки добавляются; replace — набор приводится ровно к
+                переданному, лишние снимаются.
+            withBonusList:
+              type: boolean
+              default: false
+
+    UserCard:
+      type: object
+      description: |
+        Карточка пользователя. Пустые поля опускаются, поэтому набор ключей
+        меняется от записи к записи.
+      properties:
+        found:
+          type: boolean
+          description: Есть только в ответах /get; в /sync не приходит
+        created:
+          type: boolean
+          description: |
+            Есть только в ответах /sync. true — пользователь заведён этим запросом,
+            false — нашли существующего и обновили.
+        externalId: { type: string }
+        oneCId: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        lastName: { type: string }
+        firstName: { type: string }
+        middleName: { type: string }
+        birthday: { type: string, format: date }
+        gender: { type: string, enum: [M, F, U] }
+        loyaltyCard: { type: string }
+        loyaltySumToNextDiscount: { type: number }
+        loyaltyTotalAmount: { type: number }
+        loyaltyDiscountPercent: { type: number }
+        bonusBalance:
+          type: number
+          description: |
+            Доступный баланс бонусов. Приходит всегда, в том числе нулём.
+            С withBonusList = true — из свежего снимка из 1С.
+        consentPersonalData: { type: boolean }
+        consentPersonalDataAt: { type: string, format: date-time }
+        consentMarketing: { type: boolean }
+        consentMarketingAt: { type: string, format: date-time }
+        questionnaire:
+          type: object
+          additionalProperties: true
+        externalRefs:
+          type: array
+          items:
+            type: object
+            properties:
+              provider: { type: string }
+              id: { type: string }
+              meta:
+                type: object
+                additionalProperties: true
+        bonuses:
+          type: array
+          description: Только при withBonusList = true. Формат — см. user-sync.md
+          items:
+            type: object
+            additionalProperties: true
+
+    DeactivationResult:
+      type: object
+      properties:
+        found: { type: boolean }
+        externalId: { type: string }
+        mode:
+          type: string
+          enum: [deactivate, anonymize]
+        active:
+          type: boolean
+          description: Всегда false для найденного пользователя
+        anonymized: { type: boolean }
+
+    LookupRequest:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserCriteria'
+        withBonusList:
+          type: boolean
+          default: false
+          description: Можно задать и на уровне запроса, и внутри users[i]
+
+    SyncRequest:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserInput'
+
+    DeactivateRequest:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          minItems: 1
+          items:
+            allOf:
+              - $ref: '#/components/schemas/UserCriteria'
+              - type: object
+                properties:
+                  mode:
+                    type: string
+                    enum: [deactivate, anonymize]
+        mode:
+          type: string
+          enum: [deactivate, anonymize]
+          default: deactivate
+          description: Режим по умолчанию для всех записей запроса
+
+  responses:
+
+    UserCards:
+      description: |
+        Карточки пользователей. `status: 0` здесь тоже возможен — это
+        бизнес-ошибка, а не сбой транспорта.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Envelope'
+              - type: object
+                properties:
+                  result:
+                    type: [object, 'null']
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UserCard'
+          examples:
+            found:
+              summary: Пользователь найден
+              value:
+                status: 1
+                error: null
+                result:
+                  users:
+                    - found: true
+                      externalId: '123'
+                      phone: '+79991234567'
+                      firstName: Иван
+                      loyaltyDiscountPercent: 7.5
+                      externalRefs:
+                        - provider: telegram
+                          id: '123456789'
+            notFound:
+              summary: Пользователь не найден
+              value:
+                status: 1
+                error: null
+                result:
+                  users:
+                    - found: false
+                      phone: '+79990000000'
+            businessError:
+              summary: Бизнес-ошибка
+              value:
+                status: 0
+                error: Неверный формат телефона
+                result: null
+
+    BadRequest:
+      description: Не удалось разобрать тело запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+          example:
+            status: 0
+            error: Некорректный JSON
+            result: null
+
+    Unauthorized:
+      description: Ключ не подошёл ни одному клиенту
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+          example:
+            status: 0
+            error: Неверный ApiKey
+            result: null
+
+    Forbidden:
+      description: У клиента нет нужного scope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+          example:
+            status: 0
+            error: 'Недостаточно прав: требуется scope users:deactivate'
+            result: null
+
+    MethodNotAllowed:
+      description: Поддерживается только POST
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+          example:
+            status: 0
+            error: Метод не поддерживается
+            result: null
