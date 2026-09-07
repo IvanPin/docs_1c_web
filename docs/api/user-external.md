@@ -64,6 +64,12 @@ Import → File, затем на вкладке Variables подставить `
 безопасно. Записывающие запросы включаются переменной `allowWrites = yes`, отключение
 и обезличивание — `allowDestructive = yes`.
 
+> **Postman не показывает ответ на запрос из папки «Запись» или «Отключение»** — ни статуса,
+> ни тела? Это флаг, а не сбой API: pre-request скрипт вызывает `pm.execution.skipRequest()`,
+> и запрос не уходит на сервер. Поставьте нужный флаг в `yes` на вкладке Variables коллекции
+> (в обеих колонках, Initial и Current) и сохраните. Причина пропуска пишется в Postman
+> Console — `Ctrl+Alt+C`.
+
 Машиночитаемая спека — [openapi-users.yaml](openapi-users.yaml) (OpenAPI 3.1).
 
 ### Завершающий слеш в URL
