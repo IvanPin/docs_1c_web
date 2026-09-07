@@ -498,6 +498,21 @@ updatedAt         ↔ UF_ONB_UPDATED_AT
 На стороне сайта эти бонусы кешируются в HL-блоке `UserBonusHistory` и отдаются фронту через `POST /api/v1/user/bonuses` (JWT-auth). Архитектура хранения и обновления описана в `docs-pl/api/bonuses.md`.
 
 
+### Бонусный баланс: поле `balance`
+
+`balance` — **доступный бонусный баланс** клиента. Его ведёт 1С; сайт хранит только копию
+в `UF_BALANCE` и отдаёт её как `bonusBalance` в `POST /api/v1/user/get` и
+`POST /api/v1/user/sync` (см. [user-external.md](user-external.md)).
+
+- Направление одностороннее: 1С → сайт. В исходящем payload сайта поля `balance` нет —
+  сайт не источник баланса, и его выгрузка переписала бы значение в 1С.
+- `balance` и `loyaltyTotalAmount` — **разные величины**: первое это бонусы, второе —
+  накопленная сумма покупок. До 2026-09-07 сайт ошибочно клал `balance` в оба поля
+  (`UF_BALANCE` и `UF_LOYALTY_TOTAL_AMOUNT`), из-за чего накопленная сумма показывала
+  бонусы. Значения `UF_LOYALTY_TOTAL_AMOUNT`, записанные до этой даты, недостоверны.
+- Зеркало обновляется при авторизации пользователя, при исходящем push и при каждом
+  обновлении истории бонусов (`withBonusList: true`, `POST /api/v1/user/bonuses`).
+
 ### Лояльность и большие данные
 
 - В `result.users[]` возвращаются плоские поля `loyaltyCard`, `loyaltySumToNextDiscount`, `loyaltyTotalAmount`, `loyaltyDiscountPercent`.
@@ -516,6 +531,7 @@ updatedAt         ↔ UF_ONB_UPDATED_AT
 - `PERSONAL_BIRTHDAY` ↔ `birthday`
 - `PERSONAL_GENDER` ↔ `gender`
 - `ID` (Bitrix) ↔ `externalId` (передаётся информативно)
+- `UF_BALANCE` ↔ `balance`
 - `UF_KODKARTY` ↔ `loyaltyCard`
 - `UF_SUM_TO_NEXT_DISCOUNT` (или `UF_LOYALTY_SUM_TO_NEXT`, `UF_SUM_TO_NEXT`) ↔ `loyaltySumToNextDiscount`
 - `UF_LOYALTY_TOTAL_AMOUNT` (или `UF_SUM_ACCUMULATED`, `UF_SUMMA_NAKOPLENIY`) ↔ `loyaltyTotalAmount`
