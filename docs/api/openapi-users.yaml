@@ -277,7 +277,7 @@ components:
             consentMarketingAt: { type: string, format: date-time }
             registrationSource:
               type: string
-              enum: [site, 1c, client_bot, retail_bot, max_bot]
+              enum: [site, 1c, telegram_client_bot, telegram_retail_bot, max_client_bot, max_retail_bot]
               description: Первоисточник регистрации. Пишется один раз, дальше не перезаписывается
             questionnaire:
               type: object
@@ -332,7 +332,7 @@ components:
         consentMarketingAt: { type: string, format: date-time }
         registrationSource:
           type: string
-          enum: [site, 1c, client_bot, retail_bot, max_bot]
+          enum: [site, 1c, telegram_client_bot, telegram_retail_bot, max_client_bot, max_retail_bot]
         questionnaire:
           type: object
           additionalProperties: true
