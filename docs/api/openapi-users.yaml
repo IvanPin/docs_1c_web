@@ -275,6 +275,10 @@ components:
               type: boolean
               description: Согласие на рекламные материалы. Пользователь может менять
             consentMarketingAt: { type: string, format: date-time }
+            registrationSource:
+              type: string
+              enum: [site, 1c, client_bot, retail_bot, max_bot]
+              description: Первоисточник регистрации. Пишется один раз, дальше не перезаписывается
             questionnaire:
               type: object
               description: Ответы онбординг-опросника, см. user-sync.md
@@ -326,6 +330,9 @@ components:
         consentPersonalDataAt: { type: string, format: date-time }
         consentMarketing: { type: boolean }
         consentMarketingAt: { type: string, format: date-time }
+        registrationSource:
+          type: string
+          enum: [site, 1c, client_bot, retail_bot, max_bot]
         questionnaire:
           type: object
           additionalProperties: true
