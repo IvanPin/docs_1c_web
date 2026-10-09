@@ -277,8 +277,11 @@ components:
             consentMarketingAt: { type: string, format: date-time }
             registrationSource:
               type: string
-              enum: [site, 1c, telegram_client_bot, telegram_retail_bot, max_client_bot, max_retail_bot]
+              enum: [site, 1c, telegram_client_bot, telegram_retail_bot, max_client_bot, max_retail_bot, b2b, b2b_event]
               description: Первоисточник регистрации. Пишется один раз, дальше не перезаписывается
+            registrationPlace:
+              type: [string, 'null']
+              description: Место первой регистрации. Пробелы по краям удаляются, первое непустое значение сохраняется
             questionnaire:
               type: object
               description: Ответы онбординг-опросника, см. user-sync.md
@@ -332,7 +335,10 @@ components:
         consentMarketingAt: { type: string, format: date-time }
         registrationSource:
           type: string
-          enum: [site, 1c, telegram_client_bot, telegram_retail_bot, max_client_bot, max_retail_bot]
+          enum: [site, 1c, telegram_client_bot, telegram_retail_bot, max_client_bot, max_retail_bot, b2b, b2b_event]
+        registrationPlace:
+          type: [string, 'null']
+          description: Место первой регистрации или null
         questionnaire:
           type: object
           additionalProperties: true
