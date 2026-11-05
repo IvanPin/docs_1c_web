@@ -1,0 +1,6 @@
+{
+  "status": 0,
+  "code": "UNAUTHORIZED",
+  "error": "Неверный ключ API",
+  "result": null
+}

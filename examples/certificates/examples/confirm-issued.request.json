@@ -1,0 +1,8 @@
+{
+  "orderId": 101,
+  "number": "EXAMPLE-PL-000101",
+  "externalId": "example-guid-from-1c",
+  "amount": 5000,
+  "currency": "RUB",
+  "expiresOn": "2030-12-31"
+}

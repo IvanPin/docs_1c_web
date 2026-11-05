@@ -1,0 +1,9 @@
+{
+  "status": 1,
+  "code": null,
+  "error": null,
+  "result": {
+    "orderId": 101,
+    "accepted": true
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "capturedOn": "2026-11-05",
+  "contractVersion": "1.0.0",
+  "sourceRepository": "https://github.com/IvanPin/api.kokonn.ru",
+  "sourceState": "Local working tree; certificate sources are not committed to the backend repository. These copies are reference snapshots, not a deployment.",
+  "files": [
+    {
+      "sourcePath": "local/php_interface/include/certificates/Exchange.php",
+      "snapshotPath": "examples/certificates/local/php_interface/include/certificates/Exchange.php",
+      "sha256": "164797106ce20b212eb975196bcfd14e11af8f634ef4d64454d13d7a575683fa"
+    },
+    {
+      "sourcePath": "local/php_interface/include/certificates/Purchase.php",
+      "snapshotPath": "examples/certificates/local/php_interface/include/certificates/Purchase.php",
+      "sha256": "e20b90a55ed3e4376e9b9614b02732208b43e6d967bbf7319bd939f76ea1951b"
+    },
+    {
+      "sourcePath": "local/tools/certificates/MockExchangeService.php",
+      "snapshotPath": "examples/certificates/local/tools/certificates/MockExchangeService.php",
+      "sha256": "9f14adf509151723755a6c119d34f59900055bf2e4f4a1e5a0c80cb8bb2148f2"
+    },
+    {
+      "sourcePath": "local/tools/certificates/MockOneC.php",
+      "snapshotPath": "examples/certificates/local/tools/certificates/MockOneC.php",
+      "sha256": "9d67700fe716e939889ad33e965dd026d9d1def1423a034c0aaa0ea27f516ab8"
+    },
+    {
+      "sourcePath": "local/tools/certificates/mock_1c.php",
+      "snapshotPath": "examples/certificates/local/tools/certificates/mock_1c.php",
+      "sha256": "9427bae0d04cdd68340925c91741fde897def5d9f7bc3572de0278c505ecda15"
+    },
+    {
+      "sourcePath": "local/tools/certificates/mock_exchange_router.php",
+      "snapshotPath": "examples/certificates/local/tools/certificates/mock_exchange_router.php",
+      "sha256": "cc538519991a14e68520afc25669f85565a4aa2cedc21697a9e9baeebc64a192"
+    },
+    {
+      "sourcePath": "local/tools/certificates/validate_contract.mjs",
+      "snapshotPath": "examples/certificates/local/tools/certificates/validate_contract.mjs",
+      "sha256": "b17205ce4ece4242a6849cd6d823bc4a53e4aaddf649b742a91d2c7698a78c5a"
+    },
+    {
+      "sourcePath": "api/1c/certificates/index.php",
+      "sha256": "ae528710087ed562dcc422ddd94682c890e126c577c0334a5e9ac6c19c725e4b",
+      "excerptsDocument": "docs/api/certificates-code.md"
+    },
+    {
+      "sourcePath": "local/php_interface/include/certificates/Service.php",
+      "sha256": "12ab8f7df20556c32219a084f427784204069a4f2a712f09d6286fe1efb426b6",
+      "excerptsDocument": "docs/api/certificates-code.md"
+    }
+  ]
+}

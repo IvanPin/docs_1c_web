@@ -1,0 +1,6 @@
+{
+  "status": 0,
+  "code": "CONFLICT",
+  "error": "Заказ не оплачен или отменён",
+  "result": null
+}
