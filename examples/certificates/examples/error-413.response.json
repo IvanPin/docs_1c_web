@@ -1,6 +1,0 @@
-{
-  "status": 0,
-  "code": "PAYLOAD_TOO_LARGE",
-  "error": "Слишком большой запрос",
-  "result": null
-}
