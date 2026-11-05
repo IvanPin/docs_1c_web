@@ -1,16 +1,14 @@
-# Выдержки из реализации обмена сертификатами
+# Код обмена сертификатами
 
-Снимок локального кода от **05.11.2026**, контракт **1.0.0**. Сверен с рабочими файлами backend. Новые файлы сертификатов пока не закоммичены в исходном backend-репозитории, поэтому ссылки ниже ведут на проверяемые копии и выдержки в репозитории документации. Они не подтверждают публикацию на DEV или production.
+API **1.0.0**. Снимки от **05.11.2026**; пути и строки указаны относительно backend. [SHA-256 исходников](../../examples/certificates/source-manifest.json).
 
-[Контракт](certificates.md) · [Постановка для 1С](../tasks/certificates-1c.md) · [Манифест SHA-256](../../examples/certificates/source-manifest.json).
-
-Копии `Exchange.php` и `Purchase.php` используются локальным стендом без изменений. Источник изменений API — OpenAPI и согласованная версия контракта; при обновлении реализации нужно обновить снимки и повторить проверки.
+[Контракт](certificates.md) · [Алгоритм 1С](../tasks/certificates-1c.md).
 
 <a id="http-entrypoint"></a>
 
 ## HTTP endpoint, заголовки и авторизация
 
-Источник: `api/1c/certificates/index.php`, строки 1–26. SHA-256 всего исходного файла: `ae528710087ed562dcc422ddd94682c890e126c577c0334a5e9ac6c19c725e4b`.
+Источник: `api/1c/certificates/index.php`, строки 1–26.
 
 ```php
 <?php
@@ -45,7 +43,7 @@ echo json_encode($response['body'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
 
 ## Выбор оплаченных заявок
 
-Источник: `local/php_interface/include/certificates/Service.php`, строки 198–215. SHA-256 всего исходного файла: `12ab8f7df20556c32219a084f427784204069a4f2a712f09d6286fe1efb426b6`.
+Источник: `local/php_interface/include/certificates/Service.php`, строки 198–215.
 
 ```php
     /** Проект обмена: 1С забирает только оплаченные заявки. Повторять до подтверждения выпуска. */
@@ -72,7 +70,7 @@ echo json_encode($response['body'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
 
 ## Идемпотентное подтверждение выпуска
 
-Источник: `local/php_interface/include/certificates/Service.php`, строки 217–253. SHA-256 всего исходного файла: `12ab8f7df20556c32219a084f427784204069a4f2a712f09d6286fe1efb426b6`.
+Источник: `local/php_interface/include/certificates/Service.php`, строки 217–253.
 
 ```php
     public static function issue(int $orderId, array $input): array
@@ -118,7 +116,7 @@ echo json_encode($response['body'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
 
 ## Повторная проверка оплаты и отмены
 
-Источник: `local/php_interface/include/certificates/Service.php`, строки 166–175. SHA-256 всего исходного файла: `12ab8f7df20556c32219a084f427784204069a4f2a712f09d6286fe1efb426b6`.
+Источник: `local/php_interface/include/certificates/Service.php`, строки 166–175.
 
 ```php
     public static function paidOrder(array $row): Order
@@ -137,6 +135,6 @@ echo json_encode($response['body'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
 
 - [Exchange.php](../../examples/certificates/local/php_interface/include/certificates/Exchange.php) — версия 1.0.0, scopes, GET/POST, типы параметров, лимит JSON и ошибки.
 - [Purchase.php](../../examples/certificates/local/php_interface/include/certificates/Purchase.php) — `issuance()`: валидация номера, externalId, целого номинала RUB и календарной даты.
-- [MockOneC.php](../../examples/certificates/local/tools/certificates/MockOneC.php) — демонстрация опроса и повторного callback. Это тестовый клиент; фиксация journal в конце прохода не заменяет транзакционное сохранение выпуска в рабочей 1С.
+- [MockOneC.php](../../examples/certificates/local/tools/certificates/MockOneC.php) — опрос и повтор callback; journal записывается в конце прохода.
 
-SQL-выборка использует `requestId` для страниц, а подтверждение — `orderId` для идентичности покупки. Даже точный повтор POST проверяет оплату и отмену повторно: отменённый после выпуска заказ даёт 409. `accepted: true` означает сохранение выпуска сайтом; почта выполняется отдельно.
+`requestId` — курсор, `orderId` — ключ покупки. Повтор POST повторно проверяет оплату и отмену; отменённый заказ даёт 409. Почта обрабатывается отдельно.

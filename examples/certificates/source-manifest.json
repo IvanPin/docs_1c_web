@@ -2,7 +2,7 @@
   "capturedOn": "2026-11-05",
   "contractVersion": "1.0.0",
   "sourceRepository": "https://github.com/IvanPin/api.kokonn.ru",
-  "sourceState": "Local working tree; certificate sources are not committed to the backend repository. These copies are reference snapshots, not a deployment.",
+  "sourceState": "Reference snapshots, not deployment artifacts.",
   "files": [
     {
       "sourcePath": "local/php_interface/include/certificates/Exchange.php",
