@@ -339,6 +339,12 @@ components:
         registrationPlace:
           type: [string, 'null']
           description: Место первой регистрации или null
+        registrationPage:
+          type: [string, 'null']
+          maxLength: 500
+          readOnly: true
+          description: Путь страницы первой регистрации на сайте без параметров и фрагмента URL
+          example: /catalog/rings
         questionnaire:
           type: object
           additionalProperties: true
